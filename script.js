@@ -1,6 +1,7 @@
 // ===== Sixty & Out — v02 (loop fix) =====
 const terminal = document.getElementById('terminal');
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
+const APPS_SCRIPT_URL = "/api/submit"; // proxy through Vercel
+
 
 // Typing/intro controls
 const TYPING_DELAY = 14;          // smaller = faster typing
