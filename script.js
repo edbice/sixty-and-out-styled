@@ -7,13 +7,9 @@ const introLines = [
   'BOOTING: sixty_and_out.exe',
   'LOADING: memories.sys  ▓▓▓▓▓▓▓▓▓▓  OK',
   'Hi Friends,',
-  `Every year on Nov 11 we head to Point Reyes, usually Drakes Beach.
-We dig a hole in the sand, build a huge fire, improvise a sweat lodge,
-then do the binary dance (not naked — except one wild year).`,
-  `This year is special: Nov 11 I'm turning 60 (!) and retiring after 22 years.
-I'm throwing a three-day retirement party — you are invited!`,
-  `<a href='https://www.willow-camp.com/' target='_blank'>Willow Camp</a> at Stinson Beach is booked for out-of-town guests.
-Nights of 10th–12th. Full catered dinners and breakfasts included. All gratis.`,
+  `As many of you know, every year on Nov 11 we head out to a beach at point reyes, usually Drakes Beach. There we dig a hole in the sand, build a huge fire, put volcanic rocks into the fire, improvise a sweat lodge and then start the binary dance from lodge to ocean (no, not naked, except that one year Max embraced his inner hippie and went ran raw and wild into the surf). It happens to be my birthday, but that is just a convenient annual alarm clock telling us to go do this thing at the beach.`,
+  `This year, however, we have a once in a lifetime planetary alignment happening on Nov 11. I am turning 60 (!) and, on the same day, I am retiring from the job I've held for the past 22 years. So, I am throwing a three day long retirement party and *you are invited* to join as much of this as you would like. For out of town guests (and perhaps too some local friends if my late invitation and historically subpar friendship maintenance/communications lead to some open rooms at the inn) we have booked the <a href='https://www.willow-camp.com/' target='_blank'>Willow Camp</a> at Stinson Beach. It is a bohemian compound that has hosted Steinbeck and Oppenheimer in the day. At full capacity - which includes Balinese bungalows and an AirStream trailer - it can hold 36. We have the full joint rented for the nights of the 10th and 11th and have the main house (holds 18) on the 12th. The night of the 10th we will gather everyone - local and out of town guests - for a catered sit down dinner at Willow Camp catered by <a href='https://eatingwithlily.com/' target='_blank'>Lily Chait</a>. We will cater breakfasts and oysters on the beach on the 11th. My event co-host Pic Walker will be providing an informal catered dinner on the evening of the 11th.`,
+  `Full catered dinners and breakfasts included. All gratis.`,
   "RSVP below. Press Enter to begin..."
 ];
 
