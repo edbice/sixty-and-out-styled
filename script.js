@@ -108,17 +108,19 @@ function submitForm() {
     formData.append(key, answers[key]);
   });
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    body: formData
+ fetch(APPS_SCRIPT_URL, { method: 'POST', body: formData })
+  .then(r => r.json())
+  .then(res => {
+    if (res.ok) {
+      typeLine('✓ RSVP submitted — thank you!', null);
+    } else {
+      typeLine('Error from server: ' + (res.error || 'unknown'), null);
+    }
   })
-    .then(() => {
-      typeLine('RSVP submitted successfully! Thank you 🎉', null);
-    })
-    .catch(() => {
-      typeLine('Error submitting RSVP. Please try again.', null);
-    });
-}
+  .catch(err => {
+    typeLine('Network error: ' + err.message, null);
+  });
+
 
 // ------------------ Start ------------------ //
 nextIntroLine();
