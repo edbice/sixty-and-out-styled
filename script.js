@@ -1,4 +1,4 @@
-// ===== Sixty & Out — v02 =====
+// ===== Sixty & Out — v02 (loop fix) =====
 const terminal = document.getElementById('terminal');
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
 
@@ -14,16 +14,16 @@ const introLines = [
   'Hi Friends,',
   `As many of you know, every year on Nov 11 we head out to a beach at Point Reyes, usually Drakes Beach.`,
   `There we dig a hole in the sand, build a huge fire, put volcanic rocks into the fire, and improvise a sweat lodge.`,
-  `Then comes the binary dance from lodge to ocean (no, not naked — except that one year Max embraced his inner hippie and ran raw and wild into the surf).`,
+  `Then comes the binary dance from lodge to ocean, fire to water, old to new.`,
   `It happens to be my birthday, but that’s just a convenient annual alarm clock telling us to go do this thing at the beach.`,
-  `This year, however, we have a once-in-a-lifetime planetary alignment on Nov 11.`,
+  `This year, however, we have a once-in-a-lifetime planetary alignment.`,
   `I’m turning 60 (!) and, on the same day, retiring from the job I’ve held for the past 22 years.`,
-  `So I’m throwing a three-day retirement party — and *you are invited* to join as much as you like.`,
+  `So I’m throwing a three-day retirement party — and *you are invited* to join for as much of the fun as you like.`,
   `<a href='https://www.willow-camp.com/' target='_blank'>Willow Camp</a> at Stinson Beach is our HQ for out-of-towners (and locals if rooms open up).`,
-  `It’s a bohemian compound that hosted Steinbeck and Oppenheimer back in the day; bungalows + an Airstream — sleeps up to 36.`,
+  `It’s a bohemian compound with a main house, a set of Balinese bungalows + an Airstream and sleeps up to 36.`,
   `We’ve rented the whole joint for the nights of the 10th and 11th, and the main house (holds 18) on the 12th.`,
   `Night of the 10th: catered sit-down dinner at Willow Camp by <a href='https://eatingwithlily.com/' target='_blank'>Lily Chait</a>.`,
-  `Breakfasts and oysters on the beach on the 11th; co-host Pic Walker will provide an informal dinner that evening.`,
+  `Breakfasts every morning and grilled oysters on the beach on the 11th; co-host Pic Walker will provide an informal dinner that evening.`,
   `All food and accommodations are gratis.`,
   `RSVP below. Press Enter any time to skip the intro…`
 ];
@@ -50,10 +50,11 @@ const answers = {};
 
 // ---------- Typing helpers ----------
 function typeLine(line, callback) {
-  // Render HTML lines or very long lines instantly; respect skip flag
+  // Render HTML lines or very long lines instantly; respect skip flag.
   if (SKIP_INTRO || line.includes('<a') || line.length > LONG_LINE_THRESHOLD) {
     terminal.innerHTML += line + '<br/>';
-    if (callback) callback();
+    // Defer callback to next tick to avoid re-entrancy before counters advance.
+    if (callback) setTimeout(callback, 0);
     return;
   }
 
@@ -61,7 +62,7 @@ function typeLine(line, callback) {
   const tick = () => {
     if (SKIP_INTRO) {
       terminal.innerHTML += line.slice(i) + '<br/>';
-      if (callback) callback();
+      if (callback) setTimeout(callback, 0);
       return;
     }
     terminal.innerHTML += line[i++];
@@ -69,7 +70,7 @@ function typeLine(line, callback) {
       setTimeout(tick, TYPING_DELAY);
     } else {
       terminal.innerHTML += '<br/>';
-      if (callback) callback();
+      if (callback) setTimeout(callback, 0);
     }
   };
   tick();
@@ -77,8 +78,9 @@ function typeLine(line, callback) {
 
 function nextIntroLine() {
   if (currentLine < introLines.length) {
-    typeLine(introLines[currentLine], nextIntroLine);
-    currentLine++;
+    // PRE-INCREMENT: choose the line first, then advance index to avoid loops on sync callbacks
+    const line = introLines[currentLine++];
+    typeLine(line, nextIntroLine);
   } else {
     askQuestion();
   }
@@ -103,12 +105,7 @@ function askQuestion() {
     const input = document.createElement('input');
     input.className = 'terminal-input';
     input.setAttribute('data-key', q.key);
-
-    if (q.key === 'memory') {
-      input.type = 'file';
-    } else {
-      input.type = 'text';
-    }
+    input.type = (q.key === 'memory') ? 'file' : 'text';
 
     // Handle text answers
     input.addEventListener('keydown', (e) => {
@@ -125,17 +122,17 @@ function askQuestion() {
     if (input.type === 'file') {
       input.addEventListener('change', () => {
         if (input.files && input.files[0]) {
-          answers[q.key] = input.files[0]; // real File -> goes as FormData
+          answers[q.key] = input.files[0];
           terminal.innerHTML += `<span class="answer">[File selected: ${input.files[0].name}]</span><br/>`;
         } else {
-          answers[q.key] = ''; // skipped
+          answers[q.key] = '';
           terminal.innerHTML += `<span class="answer">[No file selected]</span><br/>`;
         }
         input.remove();
         currentQuestion++;
         askQuestion();
       });
-      // Let users press Enter to skip file without choosing
+      // Allow Enter to skip file selection
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           answers[q.key] = '';
@@ -156,16 +153,12 @@ function askQuestion() {
 function fetchWithTimeout(url, options, ms = 20000) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
-  return fetch(url, { ...options, signal: ctl.signal })
-    .finally(() => clearTimeout(t));
+  return fetch(url, { ...options, signal: ctl.signal }).finally(() => clearTimeout(t));
 }
 
 function submitForm() {
   const formData = new FormData();
-  Object.keys(answers).forEach(key => {
-    // Avoid undefined; FormData handles File vs string automatically
-    formData.append(key, answers[key] ?? '');
-  });
+  Object.keys(answers).forEach(key => formData.append(key, answers[key] ?? ''));
 
   typeLine('Submitting RSVP…', () => {});
   fetchWithTimeout(APPS_SCRIPT_URL, { method: 'POST', body: formData }, 20000)
