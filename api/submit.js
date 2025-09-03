@@ -8,20 +8,13 @@ export default async function handler(req, res) {
     "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
 
   try {
-    // Convert the FormData to a plain object
+    // Parse FormData from the request
     const formData = new FormData();
-    
-    // Parse the request body (which should be FormData from frontend)
-    for (const [key, value] of Object.entries(req.body)) {
-      if (value instanceof File) {
-        // Handle file uploads - for now, just store filename
-        formData.append(key, value.name || '');
-      } else {
-        formData.append(key, value || '');
-      }
+    for await (const field of req.body) {
+      formData.append(field.name, field.value || '');
     }
 
-    // Convert FormData to JSON for Apps Script
+    // Convert to simple object for JSON
     const jsonData = {};
     for (const [key, value] of formData.entries()) {
       jsonData[key] = value;
@@ -36,13 +29,11 @@ export default async function handler(req, res) {
       },
     });
 
-    // Parse the response
     const text = await response.text();
     let data;
     try {
       data = JSON.parse(text);
     } catch {
-      // If Apps Script didn't send JSON, wrap it safely
       data = { ok: false, raw: text };
     }
 
