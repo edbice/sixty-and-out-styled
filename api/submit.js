@@ -5,7 +5,8 @@ export default async function handler(req, res) {
   }
 
   const APPS_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
+    "https://script.google.com/macros/s/AKfycbyXkeqNAjET2cVG77--Ub2ZhosNAmFMt9i-EDJTVfcFwWmkK3_oIUc1SM6r_61iagxKJQ/exec";
+ 
 
   try {
     // Vercel automatically parses FormData into req.body as an object
