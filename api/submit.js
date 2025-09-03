@@ -1,47 +1,34 @@
-// Vercel Serverless Function: /api/submit
-// Proxies form submissions to Google Apps Script to avoid CORS issues.
+// api/submit.js
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  }
 
-export const config = { runtime: 'edge' }; // Edge is fast & simple
+  const APPS_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
 
-const GAS_URL = 
-"https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
-
-export default async function handler(req) {
   try {
-    if (req.method !== 'POST') {
-      return new Response(JSON.stringify({ ok: false, error: 'Use POST' 
-}), {
-        status: 405,
-        headers: { 'content-type': 'application/json' }
-      });
+    // Forward the request to Google Apps Script
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: req.body, // raw body (formData)
+      headers: {
+        "content-type": req.headers["content-type"] || "application/json",
+      },
+    });
+
+    // Attempt to parse JSON
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // If Apps Script didn't send JSON, wrap it safely
+      data = { ok: false, raw: text };
     }
 
-    // Forward the original body as-is (FormData or JSON) without setting 
-headers
-    // so that the boundary/content-type is preserved by fetch 
-automatically.
-    const res = await fetch(GAS_URL, {
-      method: 'POST',
-      body: req.body, // streams the body through
-    });
-
-    // Read the response as text, then try JSON (Apps Script returns JSON 
-text)
-    const text = await res.text();
-    let json;
-    try { json = JSON.parse(text); }
-    catch { json = { ok: res.ok, status: res.status, body: text }; }
-
-    return new Response(JSON.stringify(json), {
-      status: res.ok ? 200 : 500,
-      headers: { 'content-type': 'application/json' }
-    });
+    res.status(response.status).json(data);
   } catch (err) {
-    return new Response(JSON.stringify({ ok: false, error: 
-String(err?.message || err) }), {
-      status: 500,
-      headers: { 'content-type': 'application/json' }
-    });
+    res.status(500).json({ ok: false, error: err.message });
   }
 }
-
