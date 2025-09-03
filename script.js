@@ -1,14 +1,13 @@
-// ===== Sixty & Out — v02 (loop fix) =====
+// ===== Sixty & Out — v02 (simplified, no file uploads) =====
 const terminal = document.getElementById('terminal');
-const APPS_SCRIPT_URL = "/api/submit"; // proxy through Vercel
-
+const APPS_SCRIPT_URL = "/api/submit";
 
 // Typing/intro controls
-const TYPING_DELAY = 14;          // smaller = faster typing
-const LONG_LINE_THRESHOLD = 360;  // very long lines render instantly
+const TYPING_DELAY = 14;          
+const LONG_LINE_THRESHOLD = 360;  
 let SKIP_INTRO = false;
 
-// ---------- Intro Lines (chunked) ----------
+// ---------- Intro Lines ----------
 const introLines = [
   'BOOTING: sixty_and_out.exe',
   'LOADING: memories.sys  ▓▓▓▓▓▓▓▓▓▓  OK',
@@ -16,32 +15,32 @@ const introLines = [
   `As many of you know, every year on Nov 11 we head out to a beach at Point Reyes, usually Drakes Beach.`,
   `There we dig a hole in the sand, build a huge fire, put volcanic rocks into the fire, and improvise a sweat lodge.`,
   `Then comes the binary dance from lodge to ocean, fire to water, old to new.`,
-  `It happens to be my birthday, but that’s just a convenient annual alarm clock telling us to go do this thing at the beach.`,
+  `It happens to be my birthday, but that's just a convenient annual alarm clock telling us to go do this thing at the beach.`,
   `This year, however, we have a once-in-a-lifetime planetary alignment.`,
-  `I’m turning 60 (!) and, on the same day, retiring from the job I’ve held for the past 22 years.`,
-  `So I’m throwing a three-day retirement party — and *you are invited* to join for as much of the fun as you like.`,
+  `I'm turning 60 (!) and, on the same day, retiring from the job I've held for the past 22 years.`,
+  `So I'm throwing a three-day retirement party — and *you are invited* to join for as much of the fun as you like.`,
   `<a href='https://www.willow-camp.com/' target='_blank'>Willow Camp</a> at Stinson Beach is our HQ for out-of-towners (and locals if rooms open up).`,
-  `It’s a bohemian compound with a main house, a set of Balinese bungalows + an Airstream and sleeps up to 36.`,
-  `We’ve rented the whole joint for the nights of the 10th and 11th, and the main house (holds 18) on the 12th.`,
+  `It's a bohemian compound with a main house, a set of Balinese bungalows + an Airstream and sleeps up to 36.`,
+  `We've rented the whole joint for the nights of the 10th and 11th, and the main house (holds 18) on the 12th.`,
   `Night of the 10th: catered sit-down dinner at Willow Camp by <a href='https://eatingwithlily.com/' target='_blank'>Lily Chait</a>.`,
   `Breakfasts every morning and grilled oysters on the beach on the 11th; co-host Pic Walker will provide an informal dinner that evening.`,
   `All food and accommodations are gratis.`,
-  `RSVP below. Press Enter any time to skip the intro…`
+  `RSVP below. Press Enter any time to skip the intro… (All fields are optional!)`
 ];
 
-// ---------- Questions (keys match Apps Script) ----------
+// ---------- Questions ----------
 const questions = [
-  { key: 'name',        question: 'What is your full name?' },
-  { key: 'email',       question: 'What is your email?' },
-  { key: 'phone',       question: 'What is your phone number?' },
-  { key: 'attending',   question: 'Will you be attending the party? (yes/no)' },
-  { key: 'guests',      question: 'Bringing guests? If yes, how many?' },
-  { key: 'nights',      question: 'Which nights are you staying at Willow Camp? (10, 11, 12)' },
-  { key: 'dinner',      question: 'Will you join dinner on the 10th? (yes/no)' },
-  { key: 'beachparty',  question: 'Will you join the beach party on the 11th? (yes/no)' },
-  { key: 'allergies',   question: 'Any allergies or dietary restrictions?' },
-  { key: 'special',     question: 'Any special needs or requests?' },
-  { key: 'memory',      question: 'Upload a memory, photo, or poem (optional). Choose a file or press Enter to skip.' }
+  { key: 'name',        question: 'What is your full name? (or how you\'d like to be addressed)' },
+  { key: 'email',       question: 'Your email? (optional - for updates only)' },
+  { key: 'phone',       question: 'Phone number? (optional - any format is fine)' },
+  { key: 'attending',   question: 'Planning to attend? (yes/no/maybe)' },
+  { key: 'guests',      question: 'Bringing guests? (number or names - whatever works)' },
+  { key: 'nights',      question: 'Which nights at Willow Camp? (10th, 11th, 12th - any combo or free text)' },
+  { key: 'dinner',      question: 'Join dinner on the 10th? (yes/no/maybe)' },
+  { key: 'beachparty',  question: 'Join beach party on the 11th? (yes/no/maybe)' },
+  { key: 'allergies',   question: 'Any allergies or dietary needs? (optional)' },
+  { key: 'special',     question: 'Any special requests or accessibility needs? (optional)' },
+  { key: 'memory',      question: 'Share a memory, poem, complaint, observation, idea, etc :) (optional)' }
 ];
 
 // ---------- State ----------
@@ -51,10 +50,8 @@ const answers = {};
 
 // ---------- Typing helpers ----------
 function typeLine(line, callback) {
-  // Render HTML lines or very long lines instantly; respect skip flag.
   if (SKIP_INTRO || line.includes('<a') || line.length > LONG_LINE_THRESHOLD) {
     terminal.innerHTML += line + '<br/>';
-    // Defer callback to next tick to avoid re-entrancy before counters advance.
     if (callback) setTimeout(callback, 0);
     return;
   }
@@ -79,7 +76,6 @@ function typeLine(line, callback) {
 
 function nextIntroLine() {
   if (currentLine < introLines.length) {
-    // PRE-INCREMENT: choose the line first, then advance index to avoid loops on sync callbacks
     const line = introLines[currentLine++];
     typeLine(line, nextIntroLine);
   } else {
@@ -87,7 +83,7 @@ function nextIntroLine() {
   }
 }
 
-// Allow Enter to skip intro any time before questions
+// Allow Enter to skip intro
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && currentLine < introLines.length) {
     SKIP_INTRO = true;
@@ -106,51 +102,26 @@ function askQuestion() {
     const input = document.createElement('input');
     input.className = 'terminal-input';
     input.setAttribute('data-key', q.key);
-    input.type = (q.key === 'memory') ? 'file' : 'text';
+    input.type = 'text';
+    input.placeholder = 'Press Enter to skip...';
 
-    // Handle text answers
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && input.type !== 'file') {
+      if (e.key === 'Enter') {
         answers[q.key] = input.value.trim();
-        terminal.innerHTML += `<span class="answer">${input.value}</span><br/>`;
+        const displayValue = input.value.trim() || '[skipped]';
+        terminal.innerHTML += `<span class="answer">${displayValue}</span><br/>`;
         input.remove();
         currentQuestion++;
         askQuestion();
       }
     });
 
-    // Handle file answer
-    if (input.type === 'file') {
-      input.addEventListener('change', () => {
-        if (input.files && input.files[0]) {
-          answers[q.key] = input.files[0];
-          terminal.innerHTML += `<span class="answer">[File selected: ${input.files[0].name}]</span><br/>`;
-        } else {
-          answers[q.key] = '';
-          terminal.innerHTML += `<span class="answer">[No file selected]</span><br/>`;
-        }
-        input.remove();
-        currentQuestion++;
-        askQuestion();
-      });
-      // Allow Enter to skip file selection
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          answers[q.key] = '';
-          terminal.innerHTML += `<span class="answer">[Skipped upload]</span><br/>`;
-          input.remove();
-          currentQuestion++;
-          askQuestion();
-        }
-      });
-    }
-
     terminal.appendChild(input);
     input.focus();
   });
 }
 
-// ---------- Submit with timeout + status ----------
+// ---------- Submit ----------
 function fetchWithTimeout(url, options, ms = 20000) {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -159,13 +130,18 @@ function fetchWithTimeout(url, options, ms = 20000) {
 
 function submitForm() {
   const formData = new FormData();
-  Object.keys(answers).forEach(key => formData.append(key, answers[key] ?? ''));
+  
+  Object.keys(answers).forEach(key => {
+    const value = answers[key] || '';
+    formData.append(key, value);
+  });
 
   typeLine('Submitting RSVP…', () => {});
+  
   fetchWithTimeout(APPS_SCRIPT_URL, { method: 'POST', body: formData }, 20000)
     .then(r => r.json())
     .then(res => {
-      if (res && res.ok) {
+      if (res && (res.ok || res.result === 'success')) {
         typeLine('✓ RSVP submitted — thank you!', null);
       } else {
         typeLine('Error from server: ' + (res && res.error ? res.error : 'unknown'), null);
