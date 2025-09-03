@@ -8,16 +8,35 @@ export default async function handler(req, res) {
     "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
 
   try {
-    // Forward the request to Google Apps Script
+    // Convert the FormData to a plain object
+    const formData = new FormData();
+    
+    // Parse the request body (which should be FormData from frontend)
+    for (const [key, value] of Object.entries(req.body)) {
+      if (value instanceof File) {
+        // Handle file uploads - for now, just store filename
+        formData.append(key, value.name || '');
+      } else {
+        formData.append(key, value || '');
+      }
+    }
+
+    // Convert FormData to JSON for Apps Script
+    const jsonData = {};
+    for (const [key, value] of formData.entries()) {
+      jsonData[key] = value;
+    }
+
+    // Forward as JSON to Google Apps Script
     const response = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
-      body: req.body, // raw body (formData)
+      body: JSON.stringify(jsonData),
       headers: {
-        "content-type": req.headers["content-type"] || "application/json",
+        "Content-Type": "application/json",
       },
     });
 
-    // Attempt to parse JSON
+    // Parse the response
     const text = await response.text();
     let data;
     try {
@@ -27,7 +46,7 @@ export default async function handler(req, res) {
       data = { ok: false, raw: text };
     }
 
-    res.status(response.status).json(data);
+    res.status(200).json(data);
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
