@@ -1,6 +1,6 @@
 // ===== Sixty & Out — v02 (simplified, no file uploads) =====
 const terminal = document.getElementById('terminal');
-const APPS_SCRIPT_URL = "/api/submit";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXkeqNAjET2cVG77--Ub2ZhosNAmFMt9i-EDJTVfcFwWmkK3_oIUc1SM6r_61iagxKJQ/exec";
 
 // Typing/intro controls
 const TYPING_DELAY = 14;          
