@@ -3,35 +3,32 @@ export default async function handler(req, res) {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  // Let's see what data we're getting from the form
-  const jsonData = {};
-  Object.keys(req.body || {}).forEach(key => {
-    jsonData[key] = req.body[key] || '';
-  });
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXkeqNAjET2cVG77--Ub2ZhosNAmFMt9i-EDJTVfcFwWmkK3_oIUc1SM6r_61iagxKJQ/exec";
 
-  // Return the data instead of sending it to Apps Script (for debugging)
-  return res.status(200).json({
-    debug: true,
-    receivedData: jsonData,
-    dataKeys: Object.keys(jsonData),
-    bodyType: typeof req.body
-  });
-}
-function submitForm() {
-  console.log('submitForm called - form is trying to submit');
-  console.log('answers object:', answers);
-  
-  const formData = new FormData();
-  
-  Object.keys(answers).forEach(key => {
-    const value = answers[key] || '';
-    console.log(`Adding to FormData: ${key} = ${value}`);
-    formData.append(key, value);
-  });
+  try {
+    const jsonData = {};
+    Object.keys(req.body || {}).forEach(key => {
+      jsonData[key] = req.body[key] || '';
+    });
 
-  console.log('About to send POST request to:', APPS_SCRIPT_URL);
-  
-  typeLine('Submitting RSVP…', () => {});
-  
-  // ... rest of your existing fetchWithTimeout code
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify(jsonData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = { ok: false, raw: text };
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
 }
