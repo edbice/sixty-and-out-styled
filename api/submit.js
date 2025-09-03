@@ -8,17 +8,15 @@ export default async function handler(req, res) {
     "https://script.google.com/macros/s/AKfycbzRWYuvLxAjbqhihk72MXaoUITNNts9bx9QkKvgn-WEonMTLcPY4tysbM0pGw3kAlfT/exec";
 
   try {
-    // Parse FormData from the request
-    const formData = new FormData();
-    for await (const field of req.body) {
-      formData.append(field.name, field.value || '');
-    }
-
-    // Convert to simple object for JSON
+    // Vercel automatically parses FormData into req.body as an object
     const jsonData = {};
-    for (const [key, value] of formData.entries()) {
-      jsonData[key] = value;
-    }
+    
+    // Extract form fields - req.body should be a plain object
+    Object.keys(req.body || {}).forEach(key => {
+      jsonData[key] = req.body[key] || '';
+    });
+
+    console.log('Form data received:', jsonData); // For debugging
 
     // Forward as JSON to Google Apps Script
     const response = await fetch(APPS_SCRIPT_URL, {
@@ -30,6 +28,8 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text();
+    console.log('Apps Script response:', text); // For debugging
+    
     let data;
     try {
       data = JSON.parse(text);
@@ -39,6 +39,7 @@ export default async function handler(req, res) {
 
     res.status(200).json(data);
   } catch (err) {
+    console.error('API Error:', err);
     res.status(500).json({ ok: false, error: err.message });
   }
 }
